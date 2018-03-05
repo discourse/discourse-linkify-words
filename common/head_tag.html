@@ -1,3 +1,11 @@
 <script type="text/discourse-plugin" version="0.1">
-  console.log(settings.linked_words);
+  let words = {};
+  settings.linked_words.split('|').forEach(pair => {
+    let split = pair.split(",");
+    words[split[0]] = split[1];
+  });
+
+  api.decorateCooked(($elem => {
+    $elem.find('*').each(function(){console.log(this);});
+  });
 </script>
