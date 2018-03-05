@@ -1,5 +1,5 @@
 {
   "name": "Auto linkify words",
   "about_url": "http://somesite.com/about_your_theme",
-  "license_url": "http://somesite.com/license"
+  "license_url": "https://github.com/discourse/discourse-linkify-words/blob/master/LICENSE"
 }
