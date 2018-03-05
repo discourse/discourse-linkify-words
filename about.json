@@ -1,5 +1,5 @@
 {
   "name": "Auto linkify words",
-  "about_url": "http://somesite.com/about_your_theme",
+  "about_url": "https://meta.discourse.org/t/linkify-words-in-post-theme-component/82193",
   "license_url": "https://github.com/discourse/discourse-linkify-words/blob/master/LICENSE"
 }
