@@ -1,0 +1,11 @@
+{
+  "name": "Auto linkify words",
+  "about_url": "http://somesite.com/about_your_theme",
+  "license_url": "http://somesite.com/license",
+  "fields" : {
+    "urls": {
+      "target": "common",
+      "type": "list"
+    }
+  }
+}
