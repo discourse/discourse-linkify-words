@@ -1,9 +1,15 @@
 <script type="text/discourse-plugin" version="0.1">
   let words = {};
+  let hasWords = false;
   settings.linked_words.split('|').forEach(pair => {
+    hasWords = true;
     let split = pair.split(",");
-    words[split[0]] = split[1];
+    words[split[0].toLowerCase()] = split[1];
   });
+
+  if (!hasWords) {
+    return;
+  }
 
   // roughly guided by https://stackoverflow.com/questions/8949445/javascript-bookmarklet-to-replace-text-with-a-link
   let skipTags = {
