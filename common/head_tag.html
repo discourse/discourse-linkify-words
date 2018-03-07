@@ -1,17 +1,16 @@
 <script type="text/discourse-plugin" version="0.1">
   let words = {};
   let hasWords = false;
+  
   settings.linked_words.split('|').forEach(pair => {
     hasWords = true;
-    let split = pair.split(",");
+    const split = pair.split(",");
     words[split[0].toLowerCase()] = split[1];
   });
 
-  if (!hasWords) {
-    return;
-  }
+  if (!hasWords) return;
 
-  // roughly guided by https://stackoverflow.com/questions/8949445/javascript-bookmarklet-to-replace-text-with-a-link
+  // cf. https://stackoverflow.com/questions/8949445/javascript-bookmarklet-to-replace-text-with-a-link
   let skipTags = {
     'a': 1,
     'iframe': 1,
@@ -19,26 +18,20 @@
     'pre': 1
   };
 
-  let escapeRegExp = function(str) {
-     return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-  }
-
-  let keys = Object.keys(words).sort((x,y) => y.length - x.length);
-
-  let escapedWords = "((" + keys.map(w => escapeRegExp(w)).join(")|(") + "))";
-  let regex = new RegExp("(\\s|^)+" + escapedWords + "(([:.;,]+(\\s|$))|\\s|$)", "ig");
-
-  let createLink = function(text) {
-      let lower = text.toLowerCase();
-      let href = words[lower];
-      var link = document.createElement('a');
+  const keys = Object.keys(words).sort((x,y) => y.length - x.length);
+  const regex = new RegExp(`(\\b)(${keys.map(k => `(${k})`).join("|")})(\\b)`, "ig");
+  
+  const createLink = (text) => {
+      const lower = text.toLowerCase();
+      const href = words[lower];
+      const link = document.createElement('a');
       link.innerHTML = text;
       link.href = href;
       link.className = 'linkify-word';
       return link;
   };
 
-  let autolink = function(text) {
+  const autolink = (text) => {
       let match, matches = [];
       while (match = regex.exec(text.data)) {
           matches.push(match);
@@ -46,19 +39,18 @@
       // got to work backwards not to muck up string
       for (let i = matches.length - 1; i >= 0; i--) {
           match = matches[i];
-
           text.splitText(match.index + match[1].length);
           text.nextSibling.splitText(match[2].length);
           text.parentNode.replaceChild(createLink(match[2]), text.nextSibling);
       }
   }
 
-  let linkify = function(elem) {
+  const linkify = (elem) => {
       // work backwards so changes do not break iteration
-      for(let i = elem.childNodes.length - 1; i >=0; i--) {
-        let child = elem.childNodes[i];
+      for(let i = elem.childNodes.length - 1; i >= 0; i--) {
+        const child = elem.childNodes[i];
         if (child.nodeType === 1) {
-            let tag = child.nodeName.toLowerCase();
+            const tag = child.nodeName.toLowerCase();
             if (!(tag in skipTags)) {
                 linkify(child);
             }
