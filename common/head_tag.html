@@ -23,7 +23,7 @@
      return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
   }
 
-  let keys = Object.keys.sort((x,y) => y.length - x.length);
+  let keys = Object.keys(words).sort((x,y) => y.length - x.length);
 
   let escapedWords = "((" + keys.map(w => escapeRegExp(w)).join(")|(") + "))";
   let regex = new RegExp("(\\s|^)+" + escapedWords + "(([:.;,]+(\\s|$))|\\s|$)", "ig");
