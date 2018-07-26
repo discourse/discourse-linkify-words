@@ -1,13 +1,22 @@
 <script type="text/discourse-plugin" version="0.1">
   let words = {};
-  let hasWords = false;
+  let regexes = {};
+  let hasWords = hasRegexes = false;
   settings.linked_words.split('|').forEach(pair => {
-    hasWords = true;
     let split = pair.split(",");
-    words[split[0].toLowerCase().trim()] = split[1].trim();
+    if (pair[0] === '/') {
+      hasRegexes = true;
+      let url = split.pop().trim();
+      let regex = split.join(",");
+      regexes[regex] = url;
+    } else {
+      hasWords = true;
+      let word = split[0].toLowerCase().trim();
+      words[word] = split[1].trim();
+    }
   });
 
-  if (!hasWords) {
+  if (!hasWords && !hasRegexes) {
     return;
   }
 
@@ -22,13 +31,16 @@
   let escapeRegExp = function(str) {
      return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
   }
-
-  let keys = Object.keys(words).sort((x,y) => y.length - x.length);
-
-  let escapedWords = "((" + keys.map(w => escapeRegExp(w)).join(")|(") + "))";
+  
   let leftWordBoundary = "(\\s|[\\([{]|^)";
   let rightWordBoundary = "([:.;,!?…\\]})]|\\s|$)";
-  let regex = new RegExp(leftWordBoundary + escapedWords + rightWordBoundary, "ig");
+    
+  let wordsRegex;
+  if (hasWords) { 
+    let keys = Object.keys(words).sort((x,y) => y.length - x.length);
+    let escapedWords = "((" + keys.map(w => escapeRegExp(w)).join(")|(") + "))";
+    wordsRegex = new RegExp(leftWordBoundary + escapedWords + rightWordBoundary, "ig");
+  }
 
   let createLink = function(text) {
       let lower = text.toLowerCase();
@@ -37,22 +49,77 @@
       link.innerHTML = text;
       link.href = href;
       link.rel = 'nofollow';
+      link.target = '_blank';
+      link.className = 'linkify-word no-track-link';
+      return link;
+  };
+  
+  let createLinkFromRegex = function(text, regex, captured) {
+      let href = regexes[regex];
+      for (let i = captured.length; i > 0; i--) {
+          let re = new RegExp("\\$" + i.toString(), "");
+          href = href.replace(re, captured[i-1]);
+      }
+      var link = document.createElement('a');
+      link.innerHTML = text;
+      link.href = href;
+      link.rel = 'nofollow';
+      link.target = '_blank';
       link.className = 'linkify-word no-track-link';
       return link;
   };
 
   let autolink = function(text) {
       let match, matches = [];
-      while (match = regex.exec(text.data)) {
+      if (hasWords) {
+        while (match = wordsRegex.exec(text.data)) {
           matches.push(match);
+        }
       }
       // got to work backwards not to muck up string
       for (let i = matches.length - 1; i >= 0; i--) {
           match = matches[i];
-
           text.splitText(match.index + match[1].length);
           text.nextSibling.splitText(match[2].length);
           text.parentNode.replaceChild(createLink(match[2]), text.nextSibling);
+      }
+      
+      for (regex in regexes) {
+          // Remove boundary backslashes
+          let reg = regex.split("/");
+          let modifier = reg.pop();
+          reg = reg.slice(1).join("/");
+          // Allow only "i" modifier for now
+          if (modifier !== "i" && modifier !== "") {
+            modifier = "";
+          }
+          try {
+            reg = new RegExp(leftWordBoundary + "(" + reg + ")" + rightWordBoundary, modifier + "g");
+          }
+          catch(err) {
+            console.log("ERROR from auto-linkify theme: Invalid regular expression!")
+            console.log(err.message);
+            continue;
+          }
+
+          match = null;
+          matches = [];
+          while (match = reg.exec(text.data)) {
+            matches.push(match);
+          }
+          // got to work backwards not to muck up string
+          for (let i = matches.length - 1; i >= 0; i--) {
+            match = matches[i];
+            text.splitText(match.index + match[1].length);
+            text.nextSibling.splitText(match[2].length);
+            // Did we capture user defined variables?
+            // By default, we capture 3 vars: left boundary, the regex itself, right boundary
+            let capturedVariables = [];
+            if (match.length > 4) {
+              capturedVariables = match.slice(3, match.length-1);
+            }
+            text.parentNode.replaceChild(createLinkFromRegex(match[2], regex, capturedVariables), text.nextSibling);
+          }
       }
   }
 
