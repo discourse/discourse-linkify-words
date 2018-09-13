@@ -4,7 +4,7 @@
   settings.linked_words.split('|').forEach(pair => {
     hasWords = true;
     let split = pair.split(",");
-    words[split[0].toLowerCase()] = split[1];
+    words[split[0].toLowerCase().trim()] = split[1].trim();
   });
 
   if (!hasWords) {
