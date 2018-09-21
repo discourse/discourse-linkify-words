@@ -36,7 +36,8 @@
       var link = document.createElement('a');
       link.innerHTML = text;
       link.href = href;
-      link.rel = "nofollow";
+      link.attributes.rel = 'nofollow';
+      link.attributes.target = '_blank';
       link.className = 'linkify-word no-track-link';
       return link;
   };
