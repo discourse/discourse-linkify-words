@@ -24,9 +24,11 @@
   let skipTags = {
     'a': 1,
     'iframe': 1,
-    'code': 1,
-    'pre': 1
   };
+
+  settings.excluded_tags.split('|').forEach(tag => {
+    skipTags[tag] = 1;
+  });
 
   let escapeRegExp = function(str) {
      return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
