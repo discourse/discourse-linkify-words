@@ -2,17 +2,30 @@
   let words = {};
   let regexes = {};
   let hasWords = hasRegexes = false;
+  if (settings.linked_words === '') {
+    return;
+  }
   settings.linked_words.split('|').forEach(pair => {
+    if (!pair.includes(',')) {
+        return;
+    }
     let split = pair.split(",");
     if (pair[0] === '/') {
-      hasRegexes = true;
       let url = split.pop().trim();
       let regex = split.join(",");
+      if (url === '' || regex === '') {
+          return;
+      }
       regexes[regex] = url;
+      hasRegexes = true;
     } else {
-      hasWords = true;
       let word = split[0].toLowerCase().trim();
-      words[word] = split[1].trim();
+      let url = split[1].trim();
+      if (word === '' || url === '') {
+          return;
+      }
+      words[word] = url;
+      hasWords = true;
     }
   });
 
@@ -89,6 +102,11 @@
       for (regex in regexes) {
           // Remove boundary backslashes
           let reg = regex.split("/");
+          if (reg.length !== 3) {
+              console.log("ERROR from auto-linkify theme: Invalid regular expression:");
+              console.log(regex);
+              continue;
+          }
           let modifier = reg.pop();
           reg = reg.slice(1).join("/");
           // Allow only "i" modifier for now
@@ -99,7 +117,8 @@
             reg = new RegExp(leftWordBoundary + "(" + reg + ")" + rightWordBoundary, modifier + "g");
           }
           catch(err) {
-            console.log("ERROR from auto-linkify theme: Invalid regular expression!")
+            console.log("ERROR from auto-linkify theme: Invalid regular expression:");
+            console.log(regex);
             console.log(err.message);
             continue;
           }
