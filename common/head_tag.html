@@ -80,7 +80,9 @@
         }
       } else {
         // Input is a case-insensitive WORD
-        modifier = 'ig';
+        // Autolink only first occurence of the word in paragraph,
+        // i.e. do not use global modifier here
+        modifier = 'i';
         word_or_regex = escapeRegExp(input);
       }
       try {
