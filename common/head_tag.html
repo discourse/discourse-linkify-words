@@ -39,8 +39,8 @@
      return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
   }
   
-  let leftWordBoundary = "(\\s|[\\([{]|^)";
-  let rightWordBoundary = "([:.;,!?…\\]})]|\\s|$)";
+  let leftWordBoundary = "(\\s|[:.;,!?…\\([{]|^)";
+  let rightWordBoundary = "(?=[:.;,!?…\\]})]|\\s|$)";
   
   let createLink = function(text, url, captured) {
     let href = url;
@@ -108,15 +108,17 @@
       // got to work backwards not to muck up string
       for (let i = matches.length - 1; i >= 0; i--) {
         match = matches[i];
-        text.splitText(match.index + match[1].length);
-        text.nextSibling.splitText(match[2].length);
+        let matched_left_boundary = match[1];
+        let matched_word = match[2];
+        text.splitText(match.index + matched_left_boundary.length);
+        text.nextSibling.splitText(matched_word.length);
         // Did we capture user defined variables?
-        // By default, we capture 3 vars: left boundary, the regex itself, right boundary
+        // By default, we capture 2 vars: left boundary and the regex itself
         let capturedVariables = [];
-        if (match.length > 4) {
-          capturedVariables = match.slice(3, match.length-1);
+        if (match.length > 3) {
+          capturedVariables = match.slice(3, match.length);
         }
-        text.parentNode.replaceChild(createLink(match[2], url, capturedVariables), text.nextSibling);
+        text.parentNode.replaceChild(createLink(matched_word, url, capturedVariables), text.nextSibling);
       }
     }
   }
