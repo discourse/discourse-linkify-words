@@ -1,27 +1,35 @@
 <script type="text/discourse-plugin" version="0.1">
   let words = {};
-  let hasWords = false;
-
+  let regexes = {};
+  let hasWords = hasRegexes = false;
   if (settings.linked_words === '') {
     return;
   }
-
   settings.linked_words.split('|').forEach(pair => {
     if (!pair.includes(',')) {
         return;
     }
     let split = pair.split(",");
-    let url = split.pop().trim();
-    // We want to allow commas in regexes
-    let word = split.join(",").trim();
-    if (url === '' || word === '') {
-        return;
+    if (pair[0] === '/') {
+      let url = split.pop().trim();
+      let regex = split.join(",");
+      if (url === '' || regex === '') {
+          return;
+      }
+      regexes[regex] = url;
+      hasRegexes = true;
+    } else {
+      let word = split[0].toLowerCase().trim();
+      let url = split[1].trim();
+      if (word === '' || url === '') {
+          return;
+      }
+      words[word] = url;
+      hasWords = true;
     }
-    words[word] = url;
-    hasWords = true;
   });
 
-  if (!hasWords) {
+  if (!hasWords && !hasRegexes) {
     return;
   }
 
@@ -39,88 +47,101 @@
      return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
   }
   
-  let leftWordBoundary = "(\\s|[:.;,!?…\\([{]|^)";
-  let rightWordBoundary = "(?=[:.;,!?…\\]})]|\\s|$)";
+  let leftWordBoundary = "(\\s|[\\([{]|^)";
+  let rightWordBoundary = "([:.;,!?…\\]})]|\\s|$)";
+    
+  let wordsRegex;
+  if (hasWords) { 
+    let keys = Object.keys(words).sort((x,y) => y.length - x.length);
+    let escapedWords = "((" + keys.map(w => escapeRegExp(w)).join(")|(") + "))";
+    wordsRegex = new RegExp(leftWordBoundary + escapedWords + rightWordBoundary, "ig");
+  }
+
+  let createLink = function(text) {
+      let lower = text.toLowerCase();
+      let href = words[lower];
+      var link = document.createElement('a');
+      link.innerHTML = text;
+      link.href = href;
+      link.rel = 'nofollow';
+      link.target = '_blank';
+      link.className = 'linkify-word no-track-link';
+      return link;
+  };
   
-  let createLink = function(text, url, captured) {
-    let href = url;
-    for (let i = captured.length; i > 0; i--) {
-      let re = new RegExp("\\$" + i.toString(), "");
-      href = href.replace(re, captured[i-1]);
-    }
-    var link = document.createElement('a');
-    link.innerHTML = text;
-    link.href = href;
-    link.rel = 'nofollow';
-    link.target = '_blank';
-    link.className = 'linkify-word no-track-link';
-    return link;
+  let createLinkFromRegex = function(text, regex, captured) {
+      let href = regexes[regex];
+      for (let i = captured.length; i > 0; i--) {
+          let re = new RegExp("\\$" + i.toString(), "");
+          href = href.replace(re, captured[i-1]);
+      }
+      var link = document.createElement('a');
+      link.innerHTML = text;
+      link.href = href;
+      link.rel = 'nofollow';
+      link.target = '_blank';
+      link.className = 'linkify-word no-track-link';
+      return link;
   };
 
   let autolink = function(text) {
-    // sort words longest first so regex matches first
-    // (does not really makes for regex input, but does not hurt either)
-    let keys = Object.keys(words).sort((x,y) => y.length - x.length);
-      
-    for (let i = 0; i < keys.length; i++) {
-      input = keys[i];
-      let url = words[input];
-      let word_or_regex, modifier;
-      let regex;
-      // Detect regex input, should look like this: /regex/i
-      let tmp = input.split("/");
-      if (input[0] === "/" && tmp.length > 2) {
-        modifier = tmp.pop();
-        word_or_regex = tmp.slice(1).join("/");
-        // Allow only "i" modifier for now, global modifier is implicit
-        if (modifier === "i") {
-          modifier += "g";
-        } else {
-          modifier = "g";
+      let match, matches = [];
+      if (hasWords) {
+        while (match = wordsRegex.exec(text.data)) {
+          matches.push(match);
         }
-      } else {
-        // Input is a case-insensitive WORD
-        // Autolink only first occurence of the word in paragraph,
-        // i.e. do not use global modifier here
-        modifier = 'i';
-        word_or_regex = escapeRegExp(input);
       }
-      try {
-        regex = new RegExp(leftWordBoundary + "(" + word_or_regex + ")" + rightWordBoundary, modifier);
-      }
-      catch(err) {
-        console.log("ERROR from auto-linkify theme: Invalid input:");
-        console.log(word);
-        console.log(err.message);
-        continue;
-      }
-
-      let matches = [];
-      let match = regex.exec(text.data);
-      if (match === null) {
-        continue;
-      }
-      do {
-        matches.push(match);
-      }
-      while (modifier.includes('g') && (match = regex.exec(text.data)) !== null);
-
       // got to work backwards not to muck up string
       for (let i = matches.length - 1; i >= 0; i--) {
-        match = matches[i];
-        let matched_left_boundary = match[1];
-        let matched_word = match[2];
-        text.splitText(match.index + matched_left_boundary.length);
-        text.nextSibling.splitText(matched_word.length);
-        // Did we capture user defined variables?
-        // By default, we capture 2 vars: left boundary and the regex itself
-        let capturedVariables = [];
-        if (match.length > 3) {
-          capturedVariables = match.slice(3, match.length);
-        }
-        text.parentNode.replaceChild(createLink(matched_word, url, capturedVariables), text.nextSibling);
+          match = matches[i];
+          text.splitText(match.index + match[1].length);
+          text.nextSibling.splitText(match[2].length);
+          text.parentNode.replaceChild(createLink(match[2]), text.nextSibling);
       }
-    }
+      
+      for (regex in regexes) {
+          // Remove boundary backslashes
+          let reg = regex.split("/");
+          if (reg.length !== 3) {
+              console.log("ERROR from auto-linkify theme: Invalid regular expression:");
+              console.log(regex);
+              continue;
+          }
+          let modifier = reg.pop();
+          reg = reg.slice(1).join("/");
+          // Allow only "i" modifier for now
+          if (modifier !== "i" && modifier !== "") {
+            modifier = "";
+          }
+          try {
+            reg = new RegExp(leftWordBoundary + "(" + reg + ")" + rightWordBoundary, modifier + "g");
+          }
+          catch(err) {
+            console.log("ERROR from auto-linkify theme: Invalid regular expression:");
+            console.log(regex);
+            console.log(err.message);
+            continue;
+          }
+
+          match = null;
+          matches = [];
+          while (match = reg.exec(text.data)) {
+            matches.push(match);
+          }
+          // got to work backwards not to muck up string
+          for (let i = matches.length - 1; i >= 0; i--) {
+            match = matches[i];
+            text.splitText(match.index + match[1].length);
+            text.nextSibling.splitText(match[2].length);
+            // Did we capture user defined variables?
+            // By default, we capture 3 vars: left boundary, the regex itself, right boundary
+            let capturedVariables = [];
+            if (match.length > 4) {
+              capturedVariables = match.slice(3, match.length-1);
+            }
+            text.parentNode.replaceChild(createLinkFromRegex(match[2], regex, capturedVariables), text.nextSibling);
+          }
+      }
   }
 
   let linkify = function(elem) {
