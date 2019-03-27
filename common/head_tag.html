@@ -2,7 +2,7 @@
   let words = {};
   let regexes = {};
   let hasWords = hasRegexes = false;
-  if (settings.linked_words === '') {
+  if (settings.linked_words.trim() === '') {
     return;
   }
   settings.linked_words.split('|').forEach(pair => {
@@ -40,7 +40,10 @@
   };
 
   settings.excluded_tags.split('|').forEach(tag => {
-    skipTags[tag] = 1;
+    tag = tag.trim().toLowerCase();
+    if (tag !== '') {
+      skipTags[tag] = 1;
+    }
   });
 
   let escapeRegExp = function(str) {
