@@ -112,6 +112,7 @@
         return;
       }
       do {
+        // This is a bit ugly, but we need the match and corresponding URL together
         match.url = url;
         matches.push(match);
       }
@@ -144,7 +145,7 @@
       if (match.length > 3) {
         capturedVariables = match.slice(3, match.length);
       }
-      text.parentNode.replaceChild(createLinkFromRegex(matched_word, regex, capturedVariables), text.nextSibling);
+      text.parentNode.replaceChild(createLink(matched_word, match.url, capturedVariables), text.nextSibling);
     }
   }
 
