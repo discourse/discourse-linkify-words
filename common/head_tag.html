@@ -75,14 +75,10 @@
         modifier = tmp.pop();
         word_or_regex = tmp.slice(1).join('/');
         // Allow only "i" modifier for now, global modifier is implicit
-        switch(modifier) {
-          case 'i':
-            modifier += 'g';
-            break;
-          case 'ig':
-            break;
-          default:
-            modifier = 'g';
+        if (modifier.includes('i')) {
+          modifier = 'ig';
+        } else {
+          modifier = 'g';
         }
       } else {
         // Input is a case-insensitive WORD
