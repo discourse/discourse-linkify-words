@@ -21,14 +21,6 @@
 
   readInputList("linked_words", words);
 
-  // Detect this pattern: /regex/modifiers
-  let isInputRegex = function(input) {
-      if (input[0] === '/' && input.split('/').length > 2)
-        return true;
-      else
-        return false;
-  }
-
   if (Object.keys(words).length === 0) {
     return;
   }
@@ -45,30 +37,32 @@
       skipTags[tag] = 1;
     }
   });
-
-  let escapeRegExp = function(str) {
-     return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-  }
   
-  let leftWordBoundary = "(\\s|[:.;,!?…\\([{]|^)";
-  let rightWordBoundary = "(?=[:.;,!?…\\]})]|\\s|$)";
-  
-  let createLink = function(text, url, captured) {
-    let href = url;
-    for (let i = captured.length; i > 0; i--) {
-      let re = new RegExp("\\$" + i.toString(), "");
-      href = href.replace(re, captured[i-1]);
-    }
+  let createLink = function(text, url) {
     var link = document.createElement('a');
     link.innerHTML = text;
-    link.href = href;
+    link.href = url;
     link.rel = 'nofollow';
     link.target = '_blank';
     link.className = 'linkify-word no-track-link';
     return link;
   };
 
+  // Detect this pattern: /regex/modifiers
+  let isInputRegex = function(input) {
+      if (input[0] === '/' && input.split('/').length > 2)
+        return true;
+      else
+        return false;
+  }
+
+  let escapeRegExp = function(str) {
+     return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+  }
+
   let prepareRegex = function(input) {
+      let leftWordBoundary = "(\\s|[:.;,!?…\\([{]|^)";
+      let rightWordBoundary = "(?=[:.;,!?…\\]})]|\\s|$)";
       let wordOrRegex, modifier, regex;
       if (isInputRegex(input)) {
         let tmp = input.split('/');
@@ -99,7 +93,7 @@
       return regex;
   }
 
-  let executeRegex = function(regex, str, url, matches) {
+  let executeRegex = function(regex, str, value, matches) {
       if (!(regex instanceof RegExp)) {
         return;
       }
@@ -108,11 +102,25 @@
         return;
       }
       do {
-        // This is a bit ugly, but we need the match and corresponding URL together
-        match.url = url;
+        // This is ugly, but we need the matched word and corresponding value together
+        match.value = value;
         matches.push(match);
       }
       while (regex.global && (match = regex.exec(str)) !== null);
+  }
+
+  let replaceCapturedVariables = function(input, match) {
+    // Did we capture user defined variables?
+    // By default, we capture 2 vars: left boundary and the regex itself
+    if (match.length <= 3)
+      return input
+    let captured = match.slice(3, match.length);
+    let replaced = input;
+    for (let i = captured.length; i > 0; i--) {
+      let re = new RegExp("\\$" + i.toString(), "");
+      replaced = replaced.replace(re, captured[i-1]);
+    }
+    return replaced;
   }
 
   let autolink = function(text) {
@@ -125,10 +133,10 @@
     let keys = inputRegexes.concat(sortedWords);
     let matches = [];
     for (let i = 0; i < keys.length; i++) {
-      let input = keys[i];
-      let url = words[input];
-      let regex = prepareRegex(input);
-      executeRegex(regex, text.data, url, matches);
+      let word = keys[i];
+      let value = words[word];
+      let regex = prepareRegex(word);
+      executeRegex(regex, text.data, value, matches);
     }
     // Sort matches according to index, descending order
     // Got to work backwards not to muck up string
@@ -137,19 +145,14 @@
       match = sortedMatches[i];
       let matchedLeftBoundary = match[1];
       let matchedWord = match[2];
+      let value = replaceCapturedVariables(match.value, match);
       // We need to protect against multiple matches of the same word or phrase
       if (match.index + matchedLeftBoundary.length + matchedWord.length > text.data.length) {
         continue;
       }
       text.splitText(match.index + matchedLeftBoundary.length);
       text.nextSibling.splitText(matchedWord.length);
-      // Did we capture user defined variables?
-      // By default, we capture 2 vars: left boundary and the regex itself
-      let capturedVariables = [];
-      if (match.length > 3) {
-        capturedVariables = match.slice(3, match.length);
-      }
-      text.parentNode.replaceChild(createLink(matchedWord, match.url, capturedVariables), text.nextSibling);
+      text.parentNode.replaceChild(createLink(matchedWord, value), text.nextSibling);
     }
   }
 
