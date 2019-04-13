@@ -1,35 +1,35 @@
 <script type="text/discourse-plugin" version="0.1">
   let words = {};
-  let hasWords = false;
-  if (settings.linked_words.trim() === '') {
-    return;
+  let readInputList = function(listName, inputs) {
+    if (settings[listName].trim() === '') {
+      return;
+    }
+    settings[listName].split('|').forEach(pair => {
+      if (!pair.includes(',')) {
+        return;
+      }
+      let split = pair.split(',');
+      let value = split.pop().trim();
+      // We want to allow commas in regexes
+      let word = split.join(',').trim();
+      if (value === '' || word === '') {
+        return;
+      }
+      inputs[word] = value;
+    });
   }
+
+  readInputList("linked_words", words);
 
   // Detect this pattern: /regex/modifiers
   let isInputRegex = function(input) {
-      let tmp = input.split('/');
-      if (input[0] === '/' && tmp.length > 2)
+      if (input[0] === '/' && input.split('/').length > 2)
         return true;
       else
         return false;
   }
 
-  settings.linked_words.split('|').forEach(pair => {
-    if (!pair.includes(',')) {
-        return;
-    }
-    let split = pair.split(',');
-    let url = split.pop().trim();
-    // We want to allow commas in regexes
-    let word = split.join(',').trim();
-    if (url === '' || word === '') {
-        return;
-    }
-    words[word] = url;
-    hasWords = true;
-  });
-
-  if (!hasWords) {
+  if (Object.keys(words).length === 0) {
     return;
   }
 
