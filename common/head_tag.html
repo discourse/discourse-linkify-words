@@ -22,6 +22,7 @@
   let skipTags = {
     'a': 1,
     'iframe': 1,
+    'abbr': 1
   };
 
   settings.excluded_tags.split('|').forEach(tag => {
@@ -41,6 +42,14 @@
     return link;
   };
 
+  let createAbbr = function(text, title) {
+      var abbr = document.createElement('abbr');
+      abbr.innerHTML = text;
+      abbr.title = title;
+      abbr.className = 'abbrify-word';
+      return abbr;
+  };
+
   Action = function(inputListName, method) {
     this.inputListName = inputListName;
     this.createNode = method;
@@ -48,7 +57,8 @@
   }
 
   linkify = new Action('linked_words', createLink),
-  actions = [linkify];
+  abbrify = new Action('abbreviations', createAbbr)
+  actions = [linkify, abbrify];
 
   actions.forEach(readInputList);
 
