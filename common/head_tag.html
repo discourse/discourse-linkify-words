@@ -1,10 +1,9 @@
 <script type="text/discourse-plugin" version="0.1">
-  let words = {};
-  let readInputList = function(listName, inputs) {
-    if (settings[listName].trim() === '') {
+  let readInputList = function(action) {
+    if (settings[action.inputListName].trim() === '') {
       return;
     }
-    settings[listName].split('|').forEach(pair => {
+    settings[action.inputListName].split('|').forEach(pair => {
       if (!pair.includes(',')) {
         return;
       }
@@ -15,14 +14,8 @@
       if (value === '' || word === '') {
         return;
       }
-      inputs[word] = value;
+      action.inputs[word] = value;
     });
-  }
-
-  readInputList("linked_words", words);
-
-  if (Object.keys(words).length === 0) {
-    return;
   }
 
   // roughly guided by https://stackoverflow.com/questions/8949445/javascript-bookmarklet-to-replace-text-with-a-link
@@ -47,6 +40,17 @@
     link.className = 'linkify-word no-track-link';
     return link;
   };
+
+  Action = function(inputListName, method) {
+    this.inputListName = inputListName;
+    this.createNode = method;
+    this.inputs = {};
+  }
+
+  linkify = new Action('linked_words', createLink),
+  actions = [linkify];
+
+  actions.forEach(readInputList);
 
   // Detect this pattern: /regex/modifiers
   let isInputRegex = function(input) {
@@ -123,7 +127,8 @@
     return replaced;
   }
 
-  let autolink = function(text) {
+  let modifyText = function(text, action) {
+    words = action.inputs;
     let inputRegexes = Object.keys(words).filter(isInputRegex);
     // sort words longest first
     let sortedWords = Object.keys(words)
@@ -152,26 +157,30 @@
       }
       text.splitText(match.index + matchedLeftBoundary.length);
       text.nextSibling.splitText(matchedWord.length);
-      text.parentNode.replaceChild(createLink(matchedWord, value), text.nextSibling);
+      text.parentNode.replaceChild(action.createNode(matchedWord, value), text.nextSibling);
     }
   }
 
-  let linkify = function(elem) {
+  let modifyNode = function(elem, action) {
       // work backwards so changes do not break iteration
       for(let i = elem.childNodes.length - 1; i >=0; i--) {
         let child = elem.childNodes[i];
         if (child.nodeType === 1) {
             let tag = child.nodeName.toLowerCase();
             if (!(tag in skipTags)) {
-                linkify(child);
+                modifyNode(child, action);
             }
         } else if (child.nodeType === 3) {
-            autolink(child);
+            modifyText(child, action);
         }
       }
   }
 
   api.decorateCooked($elem => {
-    linkify($elem[0]);
+    actions.forEach(function(a) {
+      if (Object.keys(a.inputs).length > 0) {
+        modifyNode($elem[0], a)
+      }
+    });
   });
 </script>
