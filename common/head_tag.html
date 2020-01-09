@@ -50,13 +50,6 @@
       return abbr;
   };
 
-  let createText = function(text, newText) {
-      var span = document.createElement('span');
-      span.innerHTML = newText;
-      span.className = 'replace-word';
-      return span;
-  };
-
   Action = function(inputListName, method) {
     this.inputListName = inputListName;
     this.createNode = method;
@@ -65,8 +58,7 @@
 
   linkify = new Action('linked_words', createLink),
   abbrify = new Action('abbreviations', createAbbr)
-  replace = new Action('replaced_words', createText)
-  actions = [linkify, abbrify, replace];
+  actions = [linkify, abbrify];
 
   actions.forEach(readInputList);
 
