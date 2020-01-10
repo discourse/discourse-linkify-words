@@ -33,16 +33,16 @@ export default {
         this.inputListName = inputListName;
         this.createNode = method;
         this.inputs = {};
-      }
+      };
   
-      let linkify = new Action('linked_words', createLink),
+      let linkify = new Action('linked_words', createLink);
       let actions = [linkify];
       actions.forEach(readInputList);
         
       api.decorateCooked($elem => {
-        actions.forEach(function(a) {
+        actions.forEach(a => {
           if (Object.keys(a.inputs).length > 0) {
-            modifyNode($elem[0], a)
+            modifyNode($elem[0], a, skipTags)
           }
         });
       });

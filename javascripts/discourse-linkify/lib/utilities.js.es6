@@ -93,7 +93,7 @@ const replaceCapturedVariables = function(input, match) {
 }
 
 const modifyText = function(text, action) {
-  words = action.inputs;
+  const words = action.inputs;
   let inputRegexes = Object.keys(words).filter(isInputRegex);
   // sort words longest first
   let sortedWords = Object.keys(words)
@@ -110,9 +110,9 @@ const modifyText = function(text, action) {
   }
   // Sort matches according to index, descending order
   // Got to work backwards not to muck up string
-  sortedMatches = matches.sort((m, n) => n.index - m.index);
+  const sortedMatches = matches.sort((m, n) => n.index - m.index);
   for (let i = 0; i < sortedMatches.length; i++) {
-    match = sortedMatches[i];
+    let match = sortedMatches[i];
     let matchedLeftBoundary = match[1];
     let matchedWord = match[2];
     let value = replaceCapturedVariables(match.value, match);
@@ -126,14 +126,14 @@ const modifyText = function(text, action) {
   }
 }
 
-const modifyNode = function(elem, action) {
+const modifyNode = function(elem, action, skipTags) {
   // work backwards so changes do not break iteration
   for(let i = elem.childNodes.length - 1; i >=0; i--) {
     let child = elem.childNodes[i];
     if (child.nodeType === 1) {
       let tag = child.nodeName.toLowerCase();
       if (!(tag in skipTags)) {
-        modifyNode(child, action);
+        modifyNode(child, action, skipTags);
       }
     } else if (child.nodeType === 3) {
       modifyText(child, action);
