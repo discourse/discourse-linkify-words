@@ -26,6 +26,7 @@ export default {
         link.rel = 'nofollow';
         link.target = '_blank';
         link.className = 'linkify-word no-track-link';
+        link.title = href; // small addition to display the target link on hover
         return link;
       };
 
