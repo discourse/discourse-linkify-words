@@ -127,7 +127,7 @@ const modifyText = function(text, action) {
 }
 
 const isSkippedClass = function(classes, skipClasses) {
-  if (!classes || !skipClasses) return false;
+  if (!classes) return false;
   // Return true if at least one of the classes should be skipped
   return classes.split(" ").some(cls => cls in skipClasses);
 }
@@ -140,7 +140,7 @@ const traverseNodes = function(elem, action, skipTags, skipClasses) {
       let tag = child.nodeName.toLowerCase();
       let cls = child.getAttribute("class");
       if (!(tag in skipTags) && !isSkippedClass(cls, skipClasses)) {
-        traverseNodes(child, action, skipTags);
+        traverseNodes(child, action, skipTags, skipClasses);
       }
     } else if (child.nodeType === 3) {
       modifyText(child, action);
