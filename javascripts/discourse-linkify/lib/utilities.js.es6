@@ -127,16 +127,9 @@ const modifyText = function(text, action) {
 }
 
 const isSkippedClass = function(classes, skipClasses) {
-
-  if (!classes) return false;
-
+  if (!classes || !skipClasses) return false;
   // Return true if at least one of the classes should be skipped
-  return classes.split(" ").some(cls => {
-    for (let skipClass in skipClasses) {
-      if (cls === skipClass) return true;
-    }
-    return false;
-  });
+  return classes.split(" ").some(cls => cls in skipClasses);
 }
 
 const traverseNodes = function(elem, action, skipTags, skipClasses) {
