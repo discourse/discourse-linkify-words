@@ -54,7 +54,7 @@ export default {
             traverseNodes($elem[0], action, skipTags, skipClasses)
           }
         });
-      });
+      }, {'id': 'linkify-words-theme'});
     });
   }
 }
