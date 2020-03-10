@@ -1,8 +1,8 @@
 import { withPluginApi } from "discourse/lib/plugin-api";
-import { modifyNode, readInputList} from '../lib/utilities'; 
+import { traverseNodes, readInputList} from '../lib/utilities';
 
 export default {
-  name: 'my-initializer',
+  name: 'discourse-linkify-initializer',
   initialize(){
     withPluginApi("0.8.7", api => {
 
@@ -16,6 +16,15 @@ export default {
         tag = tag.trim().toLowerCase();
         if (tag !== '') {
           skipTags[tag] = 1;
+        }
+      });
+
+      let skipClasses = {};
+
+      settings.excluded_classes.split('|').forEach(cls => {
+        cls = cls.trim().toLowerCase();
+        if (cls !== '') {
+          skipClasses[cls] = 1;
         }
       });
       
@@ -40,12 +49,12 @@ export default {
       actions.forEach(readInputList);
         
       api.decorateCooked($elem => {
-        actions.forEach(a => {
-          if (Object.keys(a.inputs).length > 0) {
-            modifyNode($elem[0], a, skipTags)
+        actions.forEach(action => {
+          if (Object.keys(action.inputs).length > 0) {
+            traverseNodes($elem[0], action, skipTags, skipClasses)
           }
         });
-      });
+      }, {'id': 'linkify-words-theme'});
     });
   }
 }

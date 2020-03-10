@@ -126,14 +126,20 @@ const modifyText = function(text, action) {
   }
 }
 
-const modifyNode = function(elem, action, skipTags) {
+const isSkippedClass = function(classes, skipClasses) {
+  // Return true if at least one of the classes should be skipped
+  return classes && classes.split(" ").some(cls => cls in skipClasses);
+}
+
+const traverseNodes = function(elem, action, skipTags, skipClasses) {
   // work backwards so changes do not break iteration
   for(let i = elem.childNodes.length - 1; i >=0; i--) {
     let child = elem.childNodes[i];
     if (child.nodeType === 1) {
       let tag = child.nodeName.toLowerCase();
-      if (!(tag in skipTags)) {
-        modifyNode(child, action, skipTags);
+      let cls = child.getAttribute("class");
+      if (!(tag in skipTags) && !isSkippedClass(cls, skipClasses)) {
+        traverseNodes(child, action, skipTags, skipClasses);
       }
     } else if (child.nodeType === 3) {
       modifyText(child, action);
@@ -141,4 +147,4 @@ const modifyNode = function(elem, action, skipTags) {
   }
 }
 
-export {readInputList, modifyNode}
+export {readInputList, traverseNodes}
