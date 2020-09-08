@@ -55,7 +55,7 @@ const prepareRegex = function(input) {
   }
   catch(err) {
     console.log("ERROR from auto-linkify theme: Invalid input:");
-    console.log(word);
+    console.log(wordOrRegex);
     console.log(err.message);
     return;
   }
