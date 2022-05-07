@@ -48,11 +48,11 @@ export default {
       let actions = [linkify];
       actions.forEach(readInputList);
 
-      api.decorateCooked(
-        ($elem) => {
+      api.decorateCookedElement(
+        (element) => {
           actions.forEach((action) => {
             if (Object.keys(action.inputs).length > 0) {
-              traverseNodes($elem[0], action, skipTags, skipClasses);
+              traverseNodes(element, action, skipTags, skipClasses);
             }
           });
         },
