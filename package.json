@@ -1,0 +1,10 @@
+{
+  "name": "discourse-linkify-words",
+  "version": "1.00.",
+  "repository": "https://github.com/discourse/discourse-linkify-words",
+  "author": "Discourse",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint-config-discourse": "^3.1.0"
+  }
+}
