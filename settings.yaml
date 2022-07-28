@@ -9,3 +9,9 @@ excluded_classes:
   type: list
   list_type: compact
   default: "onebox"
+regex_substitute_or_character:
+  default: "¦"
+match_at_word_boundary:
+  default: true
+underscore_as_word_boundary:
+  default: false
