@@ -32,17 +32,16 @@ const escapeRegExp = function (str) {
 };
 
 const prepareRegex = function (input) {
-  let leftWordBoundary = "(\\b)";
-  let rightWordBoundary = "(\\b)";
-  if (settings.match_at_word_boundary) {
-    if (settings.underscore_as_word_boundary) {
-      leftWordBoundary = "(\\b|_)";
-      rightWordBoundary = "(\\b|_)";
-    }
-  } else {
-    leftWordBoundary = "()";
-    rightWordBoundary = "()";
+  let leftWordBoundary = settings.left_word_boundary.split("|");
+  let rightWordBoundary = settings.right_word_boundary.split("|");
+  for (let i = 0; i < leftWordBoundary.length; i++) {
+      leftWordBoundary[i] = "\\"+ leftWordBoundary[i];
   }
+  for (let i = 0; i < rightWordBoundary.length; i++) {
+      rightWordBoundary[i] = "\\"+ rightWordBoundary[i];
+  }
+  leftWordBoundary =  "(" + leftWordBoundary.join("|") + "|^)";
+  rightWordBoundary = "(?=" + rightWordBoundary.join("|") + "|$)";
   let wordOrRegex, modifier, regex;
   if (isInputRegex(input)) {
     let tmp = input.split("/");
