@@ -11,7 +11,11 @@ excluded_classes:
   default: "onebox"
 regex_substitute_or_character:
   default: "¦"
-match_at_word_boundary:
-  default: true
-underscore_as_word_boundary:
-  default: false
+left_word_boundary:
+  type: list
+  list_type: compact
+  default: "\\s|:|.|;|,|!|?|…|(|[|{"
+right_word_boundary:
+  type: list
+  list_type: compact
+  default: "\\s|:|.|;|,|!|?|…|}|]|)"
