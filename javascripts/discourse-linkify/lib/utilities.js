@@ -35,10 +35,14 @@ const prepareRegex = function (input) {
   let leftWordBoundary = settings.left_word_boundary.split("|");
   let rightWordBoundary = settings.right_word_boundary.split("|");
   for (let i = 0; i < leftWordBoundary.length; i++) {
-      leftWordBoundary[i] = "\\"+ leftWordBoundary[i];
+      if (leftWordBoundary[i].charAt(0) !== "\\") {
+        leftWordBoundary[i] = "\\"+ leftWordBoundary[i];
+      }
   }
   for (let i = 0; i < rightWordBoundary.length; i++) {
-      rightWordBoundary[i] = "\\"+ rightWordBoundary[i];
+      if (rightWordBoundary[i].charAt(0) !== "\\") {
+        rightWordBoundary[i] = "\\"+ rightWordBoundary[i];
+      }
   }
   leftWordBoundary =  "(" + leftWordBoundary.join("|") + "|^)";
   rightWordBoundary = "(?=" + rightWordBoundary.join("|") + "|$)";
