@@ -6,7 +6,8 @@ const readInputList = function (action) {
     if (!pair.includes(",")) {
       return;
     }
-    let split = pair.split(",");
+    let re = new RegExp(escapeRegExp(settings.regex_substitute_or_character.charAt(0)), "g");
+    let split = pair.replace(re, "|").split(",");
     let value = split.pop().trim();
     // We want to allow commas in regexes
     let word = split.join(",").trim();
@@ -31,8 +32,20 @@ const escapeRegExp = function (str) {
 };
 
 const prepareRegex = function (input) {
-  let leftWordBoundary = "(\\s|[:.;,!?…\\([{]|^)";
-  let rightWordBoundary = "(?=[:.;,!?…\\]})]|\\s|$)";
+  let leftWordBoundary = settings.left_word_boundary.split("|");
+  let rightWordBoundary = settings.right_word_boundary.split("|");
+  for (let i = 0; i < leftWordBoundary.length; i++) {
+      if (leftWordBoundary[i].charAt(0) !== "\\") {
+        leftWordBoundary[i] = "\\"+ leftWordBoundary[i];
+      }
+  }
+  for (let i = 0; i < rightWordBoundary.length; i++) {
+      if (rightWordBoundary[i].charAt(0) !== "\\") {
+        rightWordBoundary[i] = "\\"+ rightWordBoundary[i];
+      }
+  }
+  leftWordBoundary =  "(" + leftWordBoundary.join("|") + "|^)";
+  rightWordBoundary = "(?=" + rightWordBoundary.join("|") + "|$)";
   let wordOrRegex, modifier, regex;
   if (isInputRegex(input)) {
     let tmp = input.split("/");

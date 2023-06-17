@@ -9,3 +9,13 @@ excluded_classes:
   type: list
   list_type: compact
   default: "onebox"
+regex_substitute_or_character:
+  default: "¦"
+left_word_boundary:
+  type: list
+  list_type: compact
+  default: "\\s|:|.|;|,|!|?|…|(|[|{"
+right_word_boundary:
+  type: list
+  list_type: compact
+  default: "\\s|:|.|;|,|!|?|…|}|]|)"
