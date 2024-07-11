@@ -28,6 +28,15 @@ export default {
         }
       });
 
+      let skipAttributes = {};
+
+      settings.excluded_attributes.split("|").forEach((attr) => {
+        attr = attr.trim().toLowerCase();
+        if (attr !== "") {
+          skipAttributes[attr] = 1;
+        }
+      });
+
       let createLink = function (text, url) {
         let link = document.createElement("a");
         link.innerHTML = text;
@@ -52,7 +61,7 @@ export default {
         (element) => {
           actions.forEach((action) => {
             if (Object.keys(action.inputs).length > 0) {
-              traverseNodes(element, action, skipTags, skipClasses);
+              traverseNodes(element, action, skipTags, skipClasses, skipAttributes);
             }
           });
         },
