@@ -9,3 +9,7 @@ excluded_classes:
   type: list
   list_type: compact
   default: "onebox"
+excluded_attributes:
+  type: list
+  list_type: compact
+  default: "data-nolinkify"
