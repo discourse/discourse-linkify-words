@@ -5,7 +5,7 @@ export default {
   name: "discourse-linkify-initializer",
 
   initialize() {
-    withPluginApi("0.8.7", (api) => {
+    withPluginApi((api) => {
       // roughly guided by https://stackoverflow.com/questions/8949445/javascript-bookmarklet-to-replace-text-with-a-link
       let skipTags = {
         a: 1,
